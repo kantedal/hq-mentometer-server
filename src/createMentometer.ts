@@ -3,7 +3,7 @@ import { activeSessions } from './session'
 const shortid = require('shortid') 
 
 export const createMentometer = (client: SocketIO.Socket) => {
-  const mentometerId: string = shortid.generate()
+  const mentometerId: string = shortid.generate().toLowerCase()
 
   activeSessions[mentometerId] = {
     id: mentometerId,
@@ -14,7 +14,7 @@ export const createMentometer = (client: SocketIO.Socket) => {
       voteA: 0,
       voteB: 0,
       voteC: 0,
-      userVotes: []
+      userVotes: [] 
     }
   }
   

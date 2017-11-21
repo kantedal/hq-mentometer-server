@@ -3,7 +3,8 @@ import { activeSessions } from './session'
 import { startVote } from './startVote'
 import { createMentometer } from './createMentometer'
 import { connectToMentometer } from './connectToMentometer'
-import { vote } from './vote';
+import { vote } from './vote'
+import { finishSession } from './finishSession'
 const shortid = require('shortid') 
 
 const startServer = () => {
@@ -11,7 +12,6 @@ const startServer = () => {
   const io = SocketIO(server)
 
   io.on('connection', (client: SocketIO.Socket) => {
-    console.log('Socket connected now: ' + client.id)
     client.on('action', (action) => {
       console.log('action', action)
       switch (action.type) {
@@ -27,25 +27,13 @@ const startServer = () => {
         case 'server/startVote':
           startVote(client)
           break
+        case 'server/finishSession':
+          finishSession(client)
+          break
       }
     })
 
-    client.on('disconnect', () => {
-      if (client['sessionId']) {
-        const clientSession = activeSessions[client['sessionId']]
-        if (clientSession) {
-          if (clientSession.host.id === client.id) {
-            for (const connectedClient of clientSession.clients) {
-              connectedClient.emit('action', { type: 'sessionEnded' })
-            }
-            delete activeSessions[client['sessionId']]
-          } else {
-            clientSession.clients = clientSession.clients.filter((connectedClient) => connectedClient.id !== client.id)
-            clientSession.host.emit('action', { type: 'clientConnected', payload: clientSession.clients.length })
-          }
-        }
-      }
-    })
+    client.on('disconnect', () => finishSession(client))
   })
 
   server.listen(4000)
